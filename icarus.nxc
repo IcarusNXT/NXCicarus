@@ -1,0 +1,208 @@
+task Gruen();
+int farbeRechts = 0;
+int farbeLinks = 0;
+
+#define Warten4 400
+#define Warten3 350
+#define reset 25
+
+task Farbwerte( )
+{
+ unsigned int rotWertRechts;
+ unsigned int gruenWertRechts;
+ unsigned int blauWertRechts;
+ unsigned int rotWertLinks;
+ unsigned int gruenWertLinks;
+ unsigned int blauWertLinks;
+
+
+
+ while(true){
+            rotWertRechts = ColorSensorValue(IN_1, INPUT_RED);
+             gruenWertRechts = ColorSensorValue(IN_1, INPUT_GREEN);
+             blauWertRechts = ColorSensorValue(IN_1, INPUT_BLUE);
+             NumOut(0,LCD_LINE1,rotWertRechts);
+             NumOut(0,LCD_LINE2,gruenWertRechts);
+             NumOut(0,LCD_LINE3,blauWertRechts);
+             NumOut(0,LCD_LINE7,Sensor(IN_3));
+
+             if(Sensor(IN_1)==1)
+             {
+              farbeRechts = 1;   //schwarz
+             }
+             else if(Sensor(IN_1)==6)
+             {
+              farbeRechts = 6;  //weiß
+             }
+             else if(Sensor(IN_1)==3)
+             {
+              farbeRechts = 3;  //gruen
+             }
+
+
+             
+             else{
+              farbeRechts = 0;   //nichts
+             }
+
+             NumOut(0,LCD_LINE5,Sensor(IN_1));
+
+             rotWertLinks = ColorSensorValue(IN_2, INPUT_RED);
+             gruenWertLinks = ColorSensorValue(IN_2, INPUT_GREEN);
+             blauWertLinks = ColorSensorValue(IN_2, INPUT_BLUE);
+             NumOut(50,LCD_LINE1,rotWertLinks);
+             NumOut(50,LCD_LINE2,gruenWertLinks);
+             NumOut(50,LCD_LINE3,blauWertLinks);
+
+             if(Sensor(IN_2)==1)
+             {
+              farbeLinks = 1; //schwarz
+             }
+
+             else if(Sensor(IN_2)==6)
+             {
+              farbeLinks = 6; //weiß
+             }
+             else if(Sensor(IN_2)==3)
+             {
+              farbeLinks = 3; //gruen
+             }
+
+                 
+             else{
+              farbeLinks = 0; //nichts
+              }
+
+
+             NumOut(50,LCD_LINE5,Sensor(IN_2));
+
+
+             Wait(10);
+             ClearScreen();
+
+
+ }
+
+}
+
+
+
+task  Linienfolgen()
+{
+
+  while(true)
+  {
+   Wait(5);
+
+   if (farbeLinks == 1)
+   {
+   //Off(OUT_AB);
+   OnFwd(OUT_A,65);
+   OnRev(OUT_B,55);
+   //Wait(20);
+   }
+
+    else if (farbeRechts == 1)
+    {
+    //Off(OUT_AB);
+    OnFwd(OUT_B,65);
+    OnRev(OUT_A,55);
+    //Wait(20);
+    }
+    else if (farbeLinks == 3)
+    {
+    //Off(OUT_AB);
+    start Gruen;
+    stop Linienfolgen;
+    }
+   else if (farbeRechts == 3)
+   {
+   //Off(OUT_AB);
+   start Gruen;
+   stop Linienfolgen;
+   }
+
+   else
+   {
+   OnFwd(OUT_AB,50);
+   }
+  }
+}
+
+
+
+
+
+
+
+task  Gruen()
+{
+   Off(OUT_AB);
+   Wait(10);
+   while(true)
+  {
+   if (farbeLinks == 3)
+   {
+   Off(OUT_AB);
+   OnFwd(OUT_A,85);
+   Wait(Warten4);
+   PlaySound(SOUND_DOUBLE_BEEP);
+   }
+
+   else if (farbeRechts == 3)
+  {
+   Off(OUT_AB);
+   OnFwd(OUT_B,85);
+   Wait(Warten4);
+   PlaySound(SOUND_DOUBLE_BEEP);
+   }
+
+   if (farbeLinks == 1)
+  {
+    start Linienfolgen;
+    stop Gruen;
+  }
+
+   if (farbeRechts == 1)
+  {
+   start Linienfolgen;
+   stop Gruen;
+  }
+ }
+}
+
+task Dose()
+{
+ while(true)
+ {
+ Wait(5);
+ if (Sensor(IN_3)==1)
+ {
+  stop Linienfolgen;
+  stop Gruen;
+  OnFwd(OUT_A,50);
+  OnRev(OUT_B,50);
+  Wait(1000);
+  PlaySound(SOUND_DOUBLE_BEEP);
+  OnFwd(OUT_B,70);
+  OnFwd(OUT_A,25);
+  Wait(3000);
+  PlaySound(SOUND_DOUBLE_BEEP);
+  OnRev(OUT_B,50);
+  Wait(50);
+  start Linienfolgen;
+ }
+ }
+}
+
+
+
+task main()
+ {
+ SetSensorColorFull(IN_1);
+ SetSensorColorFull(IN_2);
+ SetSensorTouch(IN_3);
+ start Farbwerte;
+ start Linienfolgen;
+ start Dose;
+ }
